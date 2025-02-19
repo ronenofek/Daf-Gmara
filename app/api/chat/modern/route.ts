@@ -1,13 +1,14 @@
+export const maxDuration = 60
 import { generateText } from "ai"
 import { openai } from "@ai-sdk/openai"
-import { isHebrewText } from "../../utils/language-utils"
-import { withRetry } from "../../utils/retry"
-import { logError } from "../../utils/error-utils"
+import { isHebrewText } from "../../../utils/language-utils"
+import { withRetry } from "../../../utils/retry"
+import { logError } from "../../../utils/error-utils"
 
 export const runtime = "nodejs"
 
-const TIMEOUT_DURATION = 40000 // 40 seconds
-const MAX_TOKENS = 120 // Reduced from 150 to further optimize costs
+const TIMEOUT_DURATION = 15000 // 15 seconds
+const MAX_TOKENS = 200 // Increased from 100 to provide more detailed modern context
 
 export async function POST(req: Request) {
   let message = ""
@@ -24,30 +25,30 @@ export async function POST(req: Request) {
 
     try {
       const systemMessage = isHebrew
-        ? `אתה חברותא מומחה עם ידע מעמיק בתלמוד. אתה מסביר נושאים תלמודיים בבהירות, תוך שימוש במקורות ודוגמאות רלוונטיות. התאם את התשובות שלך לרמת הידע של השואל.`
-        : `You are an expert study partner with deep knowledge of the Talmud. You explain Talmudic topics clearly, using relevant sources and examples. Tailor your responses to the questioner's level of knowledge.`
+        ? `אתה חברותא מומחה עם ידע מעמיק בתלמוד ובהשלכותיו המודרניות. אתה מסביר כיצד נושאים תלמודיים רלוונטיים לחיים המודרניים.`
+        : `You are an expert study partner with deep knowledge of the Talmud and its modern implications. You explain how Talmudic topics are relevant to modern life.`
 
       const prompt = isHebrew
         ? `נושא: "${message}"
      מסכת: ${dafInfo.masechet}, דף: ${dafInfo.daf}
 
      הנחיות:
-     1. הסבר את הנושא כפי שהוא מופיע בגמרא.
-     2. ציין מקורות ודעות רלוונטיות של חכמים.
-     3. אם הנושא אינו קשור ישירות לדף הנוכחי, הסבר את הקשר או הצע נושא קרוב מהדף.
-     4. השתמש בשפה ברורה ומובנת.
+     1. הסבר בקצרה את המשמעות המודרנית של הנושא (עד 50 מילים).
+     2. התייחס להשלכות אתיות, חברתיות או מעשיות בימינו.
+     3. אם אפשר, תן דוגמה מודרנית לעיקרון התלמודי.
+     4. השתמש בשפה ברורה ורלוונטית לקהל מודרני.
 
-     תשובה:`
+     משמעות מודרנית:`
         : `Topic: "${message}"
      Tractate: ${dafInfo.masechet}, Daf: ${dafInfo.daf}
 
      Instructions:
-     1. Explain the topic as it appears in the Gemara.
-     2. Mention relevant sources and opinions of sages.
-     3. If the topic is not directly related to the current daf, explain the connection or suggest a close topic from the daf.
-     4. Use clear and understandable language.
+     1. Briefly explain the modern significance of the topic (up to 50 words).
+     2. Address ethical, social, or practical implications in our time.
+     3. If possible, give a modern example of the Talmudic principle.
+     4. Use clear language relevant to a modern audience.
 
-     Response:`
+     Modern Significance:`
 
       const generateResponse = async () => {
         const { text } = await generateText({
@@ -61,9 +62,9 @@ export async function POST(req: Request) {
       }
 
       const response = await withRetry(generateResponse, {
-        maxAttempts: 3,
+        maxAttempts: 4,
         initialDelay: 1000,
-        maxDelay: 5000,
+        maxDelay: 3000,
       })
 
       clearTimeout(timeoutId)
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
       throw error
     }
   } catch (error) {
-    logError(error, "Chat generation", { message })
+    logError(error, "Modern chat generation", { message })
 
     const errorMessage = isHebrewText(message)
       ? "מצטערים, אירעה שגיאה בעיבוד ההודעה. נא לנסות שוב."

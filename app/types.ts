@@ -5,19 +5,6 @@ export type Message = {
   sender: "user" | "bot"
 }
 
-export type Translations = {
-  [key in Language]: {
-    title: string
-    date: string
-    gemaraPage: string
-    enterTopic: string
-    send: string
-    popularTopics: string
-    recentDiscussions: string
-    chavruta: string
-  }
-}
-
 export type DafInfo = {
   masechet: string
   daf: number
