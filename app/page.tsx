@@ -37,7 +37,7 @@ const numberToHebrewLetters = (num: number): string => {
   return result
 }
 
-// Default discussion points
+// Update the getDefaultDiscussionPoints function
 const getDefaultDiscussionPoints = (masechet: string, daf: number) => ({
   en: [
     `The main discussion in ${getEnglishMasechetName(masechet)} ${daf}`,
@@ -45,6 +45,7 @@ const getDefaultDiscussionPoints = (masechet: string, daf: number) => ({
     `Ethical teachings in ${getEnglishMasechetName(masechet)} ${daf}`,
     `Practical applications of ${getEnglishMasechetName(masechet)} ${daf}`,
     `Related discussions to ${getEnglishMasechetName(masechet)} ${daf}`,
+    `Modern implications of selected subjects in ${getEnglishMasechetName(masechet)} ${daf}`,
   ],
   he: [
     `הדיון המרכזי ב${masechet} דף ${numberToHebrewLetters(daf)}`,
@@ -52,6 +53,7 @@ const getDefaultDiscussionPoints = (masechet: string, daf: number) => ({
     `לימודי מוסר ב${masechet} דף ${numberToHebrewLetters(daf)}`,
     `יישומים מעשיים של ${masechet} דף ${numberToHebrewLetters(daf)}`,
     `דיונים קשורים ל${masechet} דף ${numberToHebrewLetters(daf)}`,
+    `השלכות מודרניות של נושאים נבחרים ב${masechet} דף ${numberToHebrewLetters(daf)}`,
   ],
 })
 
@@ -83,7 +85,6 @@ const DailyGemara = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isThinking, setIsThinking] = useState(false)
-  const [showOptions, setShowOptions] = useState(false)
   const [currentTopic, setCurrentTopic] = useState("")
 
   const chatEndRef = useRef<HTMLDivElement>(null)
@@ -100,12 +101,11 @@ const DailyGemara = () => {
     }
 
     fetchDafInfo()
-    setShowOptions(false)
   }, [])
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [chatMessages])
+  }, [])
 
   const handleSend = async () => {
     if (!dafInfo || !message.trim() || isLoading) return
@@ -116,7 +116,6 @@ const DailyGemara = () => {
     setIsLoading(true)
     setIsThinking(true)
     setError(null)
-    setShowOptions(false)
     setCurrentTopic(userMessage)
 
     try {
@@ -129,39 +128,9 @@ const DailyGemara = () => {
       )
 
       setChatMessages((prev) => [...prev, { text: data.response, sender: "bot" }])
-      setShowOptions(true)
     } catch (error) {
       logError(error, "handleSend", { userMessage })
       const errorMessage = handleError(error, userMessage)
-      setChatMessages((prev) => [...prev, { text: errorMessage, sender: "bot" }])
-      setError(error instanceof Error ? error.message : "An unexpected error occurred")
-    } finally {
-      setIsLoading(false)
-      setIsThinking(false)
-    }
-  }
-
-  const handleModernExplanation = async () => {
-    if (!currentTopic || !dafInfo || isLoading) return
-
-    setIsLoading(true)
-    setIsThinking(true)
-    setError(null)
-    setShowOptions(false)
-
-    try {
-      const data = await handleFetchResponse(
-        await fetch("/api/chat/modern", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: currentTopic, dafInfo }),
-        }),
-      )
-
-      setChatMessages((prev) => [...prev, { text: data.response, sender: "bot" }])
-    } catch (error) {
-      logError(error, "handleModernExplanation", { currentTopic })
-      const errorMessage = handleError(error, currentTopic)
       setChatMessages((prev) => [...prev, { text: errorMessage, sender: "bot" }])
       setError(error instanceof Error ? error.message : "An unexpected error occurred")
     } finally {
@@ -271,17 +240,6 @@ const DailyGemara = () => {
                       </div>
                     )
                   })}
-                  {showOptions && (
-                    <div className="mb-4 text-center">
-                      <Button
-                        onClick={handleModernExplanation}
-                        variant="outline"
-                        className="hover:bg-blue-100 hover:text-blue-600"
-                      >
-                        {translations[language].showModern}
-                      </Button>
-                    </div>
-                  )}
                   {isThinking && <ThinkingIndicator language={language} />}
                   <div ref={chatEndRef} />
                 </CardContent>
