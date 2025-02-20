@@ -13,7 +13,15 @@ export function setCachedData(key: string, data: any) {
   cache.set(key, data)
 }
 
-export function generateCacheKey(type: string, masechet: string, daf: number, message: string, language: string) {
-  return `${type}-${masechet}-${daf}-${message}-${language}`
+// Modify the generateCacheKey function to include the model
+export function generateCacheKey(
+  type: string,
+  masechet: string,
+  daf: number,
+  message: string,
+  language: string,
+  model: string,
+) {
+  return `${type}-${masechet}-${daf}-${message}-${language}-${model}`
 }
 

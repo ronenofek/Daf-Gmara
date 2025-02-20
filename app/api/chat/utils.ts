@@ -9,8 +9,9 @@ export async function generateChatResponse(
   dafInfo: { masechet: string; daf: number },
   language: "en" | "he",
   maxTokens: number,
+  model: "gpt-3.5-turbo" | "gpt-4o", // Add this parameter
 ) {
-  const cacheKey = generateCacheKey(type, dafInfo.masechet, dafInfo.daf, message, language)
+  const cacheKey = generateCacheKey(type, dafInfo.masechet, dafInfo.daf, message, language, model) // Include model in cache key
   const cachedResponse = getCachedData(cacheKey)
 
   if (cachedResponse) {
@@ -22,7 +23,7 @@ export async function generateChatResponse(
 
   const generateResponse = async () => {
     const { text } = await generateText({
-      model: openai("gpt-3.5-turbo"),
+      model: openai(model), // Use the specified model
       system: systemMessage,
       prompt,
       max_tokens: maxTokens,

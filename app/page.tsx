@@ -9,6 +9,7 @@ import type { Language, Message, DafInfo } from "./types"
 import { isHebrewText, getEnglishMasechetName } from "./utils/language-utils"
 import { ErrorBoundary } from "./components/error-boundary"
 import { handleFetchResponse, logError } from "./utils/error-utils"
+import { Switch } from "@/components/ui/switch"
 
 const numberToHebrewLetters = (num: number): string => {
   const units = ["", "א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט"]
@@ -86,6 +87,7 @@ const DailyGemara = () => {
   const [error, setError] = useState<string | null>(null)
   const [isThinking, setIsThinking] = useState(false)
   const [currentTopic, setCurrentTopic] = useState("")
+  const [useGpt4, setUseGpt4] = useState(false)
 
   const chatEndRef = useRef<HTMLDivElement>(null)
 
@@ -107,6 +109,10 @@ const DailyGemara = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [])
 
+  const toggleModel = () => {
+    setUseGpt4((prev) => !prev)
+  }
+
   const handleSend = async () => {
     if (!dafInfo || !message.trim() || isLoading) return
 
@@ -123,7 +129,7 @@ const DailyGemara = () => {
         await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: userMessage, dafInfo }),
+          body: JSON.stringify({ message: userMessage, dafInfo, model: useGpt4 ? "gpt-4o" : "gpt-3.5-turbo" }),
         }),
       )
 
@@ -149,6 +155,7 @@ const DailyGemara = () => {
       showModern: "Discuss modern implications",
       subtitle: "Tradition Meets Technology - Daily Daf Learning with AI",
       defaultDiscussionPoints: "Suggested Discussion Points",
+      modelToggle: "Use GPT-4",
     },
     he: {
       title: "תלמוד היום",
@@ -159,6 +166,7 @@ const DailyGemara = () => {
       showModern: "דון בהשלכות מודרניות",
       subtitle: "מסורת פוגשת טכנולוגיה - לימוד הדף היומי בעזרת הבינה המלאכותית",
       defaultDiscussionPoints: "נושאי שיחה מוצעים",
+      modelToggle: "השתמש ב-GPT-4",
     },
   }
 
@@ -291,6 +299,14 @@ const DailyGemara = () => {
             </div>
           </div>
         </main>
+        <div
+          className={`fixed bottom-4 ${language === "he" ? "left-4" : "right-4"} flex items-center space-x-2 bg-background/80 backdrop-blur-sm p-2 rounded-lg shadow-sm`}
+        >
+          <Switch id="model-toggle" checked={useGpt4} onCheckedChange={toggleModel} />
+          <label htmlFor="model-toggle" className="text-sm text-muted-foreground whitespace-nowrap">
+            {translations[language].modelToggle}
+          </label>
+        </div>
       </div>
     </ErrorBoundary>
   )

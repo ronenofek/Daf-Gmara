@@ -7,13 +7,14 @@ export const runtime = "nodejs"
 const TIMEOUT_DURATION = 40000 // 40 seconds
 const MAX_TOKENS = 120
 
+// Modify the POST function to accept the model parameter
 export async function POST(req: Request) {
   let message = ""
   try {
-    const { message: reqMessage, dafInfo } = await req.json()
+    const { message: reqMessage, dafInfo, model } = await req.json()
     message = reqMessage
-    if (!message || !dafInfo) {
-      throw new Error("Missing message or dafInfo")
+    if (!message || !dafInfo || !model) {
+      throw new Error("Missing message, dafInfo, or model")
     }
 
     const isHebrew = isHebrewText(message)
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_DURATION)
 
     try {
-      const response = await generateChatResponse("main", message, dafInfo, language, MAX_TOKENS)
+      const response = await generateChatResponse("main", message, dafInfo, language, MAX_TOKENS, model)
 
       clearTimeout(timeoutId)
       return Response.json({ response })
